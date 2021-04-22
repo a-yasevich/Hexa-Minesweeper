@@ -3,11 +3,9 @@ package controller
 import model.Board
 import model.Cell
 
-class BoardBasedHexListener(val board: Board):HexListener {
-    //Контроллер видит, когда пользователь совершает действие с представлением и передаёт это действие в модель
+class BoardBasedHexListener(private val board: Board) : HexListener {
     override fun hexClicked(cell: Cell) {
-        //if (board.winner() == null)
-        board.openHex(TODO())
+        board.openHex(cell)
     }
 
 }

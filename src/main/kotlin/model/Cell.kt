@@ -1,8 +1,6 @@
 package model
 
-class Cell(val hexX: Int, val hexY: Int){
-
-
+class Cell(val hexX: Int, val hexY: Int) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -23,7 +21,7 @@ class Cell(val hexX: Int, val hexY: Int){
     }
 
     override fun toString(): String {
-        return "model.Cell($hexX, $hexY)"
+        return "Cell($hexX, $hexY)"
     }
 
 }

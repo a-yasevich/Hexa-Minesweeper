@@ -1,19 +1,12 @@
-import javafx.scene.text.FontWeight
-import tornadofx.Stylesheet
-import tornadofx.box
-import tornadofx.cssclass
-import tornadofx.px
+import javafx.scene.paint.Color
 
-class Styles : Stylesheet() {
+class Styles {
     companion object {
-        val heading by cssclass()
-    }
-
-    init {
-        label and heading {
-            padding = box(10.px)
-            fontSize = 20.px
-            fontWeight = FontWeight.BOLD
-        }
+        val BOMB = "bomb.png"
+        val MARKER = "marker.png"
+        val EMPTY_CELL_COLOR = Color.LIGHTCYAN
+        val CELL_COLOR = Color.DARKCYAN
+        val BACKGROUND_COLOR = Color.LIGHTGRAY
+        val CELL_STROKE_COLOR = Color.BLACK
     }
 }
