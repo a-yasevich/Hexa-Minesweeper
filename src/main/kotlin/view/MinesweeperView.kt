@@ -167,7 +167,6 @@ class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
             cellsRemaining == 0 -> "You won! Restart game to play again"
             else -> "Game in process"
         }
-        println("Updating $cell")
         when (minedNeighbours) {
             0 -> hex.fill = Styles.EMPTY_CELL_COLOR
             1 -> hex.fill = ImagePattern(Image("one.png"))
@@ -181,7 +180,6 @@ class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
     }
 
     override fun turnMade(cell: Cell, minedNeighbours: Int) {
-        println("View is going to update $cell near $minedNeighbours bombs")
         updateBoardAndStatus(cell, minedNeighbours)
     }
 

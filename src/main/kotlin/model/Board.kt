@@ -18,7 +18,6 @@ class Board(
 
     fun openHex(cell: Cell) {
         val hex = hexes[cell] ?: return
-        println("Board is going to open $hex")
         if (hex.hasBomb) {
             gameInProcess = false
             listener?.turnMade(cell, -1)
@@ -39,10 +38,8 @@ class Board(
     }
 
     private fun initialize() {
-        println("Board initialisation")
         val hexes = mutableMapOf<Cell, Hex>()
         val bombs = bombPlanter.plantBombs(numberOfBombs)
-        println("Bombs: $bombs")
         for (x in 0 until columns)
             for (y in 0 until rows) {
                 val cell = Cell(x, y)
