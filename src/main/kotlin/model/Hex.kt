@@ -1,20 +1,24 @@
 package model
 
-class Hex(val hexX: Int, val hexY: Int, val hasBomb: Boolean) {
-    constructor(cell: Cell, hasBomb: Boolean) : this(cell.hexX, cell.hexY, hasBomb)
+class Hex(private val x: Int, private val y: Int, val hasBomb: Boolean) {
 
-    var isOpened = false
-    val neighbors = listOf(
-        Cell(if (hexY % 2 == 0) hexX - 1 else hexX + 1, hexY - 1),
-        Cell(hexX, hexY - 1),
-        Cell(hexX + 1, hexY),
-        Cell(hexX - 1, hexY),
-        Cell(if (hexY % 2 == 0) hexX - 1 else hexX + 1, hexY + 1),
-        Cell(hexX, hexY + 1)
-    )
+    constructor(cell: Cell, hasBomb: Boolean) : this(cell.x, cell.y, hasBomb)
 
-    override fun toString(): String {
-        return "Hex(hexX=$hexX, hexY=$hexY, hasBomb=$hasBomb)"
+    private var isOpened = false
+    val neighbors: List<Cell> by lazy {
+        listOf(
+            Cell(if (y % 2 == 0) x - 1 else x + 1, y - 1),
+            Cell(x, y - 1),
+            Cell(x + 1, y),
+            Cell(x - 1, y),
+            Cell(if (y % 2 == 0) x - 1 else x + 1, y + 1),
+            Cell(x, y + 1)
+        )
     }
 
+    fun open() {
+        isOpened = true
+    }
+
+    fun isOpened() = isOpened
 }

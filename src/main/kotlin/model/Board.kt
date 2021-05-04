@@ -2,7 +2,8 @@ package model
 
 import controller.BoardListener
 
-class Board(
+class Board
+    (
     private val rows: Int,
     private val columns: Int,
     private val numberOfBombs: Int,
@@ -10,54 +11,49 @@ class Board(
     private val listener: BoardListener?
 ) {
     private var hexes = mapOf<Cell, Hex>()
-    private var gameInProcess = true
-
-    init {
-        initialize()
-    }
+    private var gameStatus = GameStatus.ON_START
 
     fun openHex(cell: Cell) {
+        if (gameStatus == GameStatus.ON_START)
+            initialize(cell)
         val hex = hexes[cell] ?: return
         if (hex.hasBomb) {
-            gameInProcess = false
-            listener?.turnMade(cell, -1)
+            gameStatus = GameStatus.LOSE
+            listener?.turnMade(cell, HexStatus.EXPLOSION)
             return
         }
-        if (hex.isOpened)
-            return
-        hex.isOpened = true
+        hex.open()
         var minedNeighbours = 0
-        for (neighbour in hex.neighbors)
-            if (neighbour.isInside() && hexes[neighbour]!!.hasBomb)
+        for (neighbour in hex.neighbors.filter { it.isInside() })
+            if (hexes[neighbour]?.hasBomb ?: return)
                 minedNeighbours++
         if (minedNeighbours == 0)
-            for (neighbour in hex.neighbors)
-                if (neighbour.isInside() && !hexes[neighbour]!!.isOpened)
+            for (neighbour in hex.neighbors.filter { it.isInside() })
+                if (!(hexes[neighbour] ?: return).isOpened())
                     openHex(neighbour)
-        listener?.turnMade(cell, minedNeighbours)
+        if (numberOfCellsRemaining() == 0)
+            gameStatus = GameStatus.WON
+        listener?.turnMade(cell, HexStatus.statusByNumberOfNeighbours(minedNeighbours))
     }
 
-    private fun initialize() {
+    private fun initialize(exceptionCell: Cell) {
         val hexes = mutableMapOf<Cell, Hex>()
-        val bombs = bombPlanter.plantBombs(numberOfBombs)
+        val bombs = bombPlanter.plantBombs(rows, columns, numberOfBombs, exceptionCell)
         for (x in 0 until columns)
             for (y in 0 until rows) {
                 val cell = Cell(x, y)
                 val hasBomb = bombs.contains(cell)
-                hexes[cell] = Hex(x, y, hasBomb)
+                hexes[cell] = Hex(cell, hasBomb)
             }
         this.hexes = hexes
+        gameStatus = GameStatus.IN_PROCESS
     }
 
-    fun numberOfCellsRemaining() = rows * columns - numberOfBombs - hexes.values.count { it.isOpened }
-    fun isGameInProcess() = gameInProcess
-
+    private fun numberOfCellsRemaining() = rows * columns - numberOfBombs - hexes.values.count { it.isOpened() }
+    fun getStatus() = gameStatus
     fun clear() {
-        if (!gameInProcess)
-            gameInProcess = true
-        initialize()
+        gameStatus = GameStatus.ON_START
     }
 
-    private fun Cell.isInside() = this.hexY in 0 until rows && this.hexX in 0 until columns
+    private fun Cell.isInside() = this.y in 0 until rows && this.x in 0 until columns
 }
-

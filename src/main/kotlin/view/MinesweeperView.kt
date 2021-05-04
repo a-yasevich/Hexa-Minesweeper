@@ -2,9 +2,7 @@ package view
 
 import controller.BoardBasedHexListener
 import controller.BoardListener
-import model.Board
 import javafx.geometry.Insets
-import javafx.scene.control.ButtonBar
 import javafx.scene.control.Label
 import javafx.scene.image.Image
 import javafx.scene.image.ImageView
@@ -12,24 +10,23 @@ import javafx.scene.layout.*
 import javafx.scene.paint.Color
 import javafx.scene.paint.ImagePattern
 import javafx.scene.shape.Polygon
-import model.Cell
-import model.RandomBasedBombPlanter
+import model.*
 import tornadofx.*
-import javax.swing.text.Style
 import kotlin.math.sqrt
 
 class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
     private val WINDOW_WIDTH = 800.0
     private val WINDOW_HEIGHT = 600.0
+    private val myApp = app as MinesweeperApp
 
-    private var numberOfBombs = (app as MinesweeperApp).bombs
-    private var rows = (app as MinesweeperApp).rows
-    private var columns = (app as MinesweeperApp).columns
+    private var numberOfBombs = myApp.bombs
+    private var rows = myApp.rows
+    private var columns = myApp.columns
 
     private lateinit var statusLabel: Label
     private var markerPressed = false
 
-    private val board = Board(rows, columns, numberOfBombs, RandomBasedBombPlanter(rows, columns), this)
+    private val board = Board(rows, columns, numberOfBombs, RandomBasedBombPlanter(), this)
     private val listener = BoardBasedHexListener(board)
     private val graphicHexes = mutableMapOf<Cell, GraphicHex>()
     override val root = BorderPane()
@@ -83,24 +80,26 @@ class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
                         children.add(hex)
                         graphicHexes[cell] = hex
                         hex.setOnMouseClicked {
-                            if (board.isGameInProcess()) {
+                            if (board.getStatus() == GameStatus.IN_PROCESS || board.getStatus() == GameStatus.ON_START) {
                                 if (markerPressed) {
                                     if (!hex.isOpen())
                                         hex.switchMarker()
-                                } else
-                                    listener.hexClicked(cell)
+                                } else {
+                                    if (!hex.isMarked())
+                                        listener.hexClicked(cell)
+                                }
                             }
                         }
                     }
             }
             bottom {
-                statusLabel = label("")
+                statusLabel = label("Click any hex to start")
             }
         }
     }
 
     class GraphicHex(column: Int, row: Int) : Polygon() {
-        constructor(cell: Cell) : this(cell.hexX, cell.hexY)
+        constructor(cell: Cell) : this(cell.x, cell.y)
 
         private val marginLeft = 20
         private val marginTop = 80
@@ -135,6 +134,7 @@ class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
             isOpen = true
         }
 
+        fun isMarked() = marker
         fun isOpen() = isOpen
         fun initialState() {
             isOpen = false
@@ -158,29 +158,25 @@ class MinesweeperView : View("Hexa Minesweeper"), BoardListener {
         board.clear()
     }
 
-    private fun updateBoardAndStatus(cell: Cell, minedNeighbours: Int) {
+    override fun turnMade(cell: Cell, status: HexStatus) {
         val hex = graphicHexes[cell] ?: return
-        val cellsRemaining = board.numberOfCellsRemaining()
+        statusLabel.text = when(board.getStatus()){
+            GameStatus.WON -> "You won! Restart game to play again"
+            GameStatus.LOSE -> "You lose! Restart game to try again"
+            GameStatus.IN_PROCESS -> "Game in process"
+            GameStatus.ON_START -> "Press any hex to start"
+        }
         hex.open()
-        statusLabel.text = when {
-            !board.isGameInProcess() && cellsRemaining != 0 -> "You lose! Restart game to try again"
-            cellsRemaining == 0 -> "You won! Restart game to play again"
-            else -> "Game in process"
+        hex.fill = when (status) {
+            HexStatus.NO_BOMBS_NEARBY -> Styles.EMPTY_CELL_COLOR
+            HexStatus.NEAR_ONE_BOMB -> ImagePattern(Image("one.png"))
+            HexStatus.NEAR_TWO_BOMBS -> ImagePattern(Image("two.png"))
+            HexStatus.NEAR_THREE_BOMBS -> ImagePattern(Image("three.png"))
+            HexStatus.NEAR_FOUR_BOMBS -> ImagePattern(Image("four.png"))
+            HexStatus.NEAR_FIVE_BOMBS -> ImagePattern(Image("five.png"))
+            HexStatus.NEAR_SIX_BOMBS -> ImagePattern(Image("six.png"))
+            HexStatus.EXPLOSION -> ImagePattern(Image("bomb.png"))
         }
-        when (minedNeighbours) {
-            0 -> hex.fill = Styles.EMPTY_CELL_COLOR
-            1 -> hex.fill = ImagePattern(Image("one.png"))
-            2 -> hex.fill = ImagePattern(Image("two.png"))
-            3 -> hex.fill = ImagePattern(Image("three.png"))
-            4 -> hex.fill = ImagePattern(Image("four.png"))
-            5 -> hex.fill = ImagePattern(Image("five.png"))
-            6 -> hex.fill = ImagePattern(Image("six.png"))
-            else -> hex.fill = ImagePattern(Image("bomb.png"))
-        }
-    }
-
-    override fun turnMade(cell: Cell, minedNeighbours: Int) {
-        updateBoardAndStatus(cell, minedNeighbours)
     }
 
 }

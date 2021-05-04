@@ -7,5 +7,4 @@ class BoardBasedHexListener(private val board: Board) : HexListener {
     override fun hexClicked(cell: Cell) {
         board.openHex(cell)
     }
-
 }
